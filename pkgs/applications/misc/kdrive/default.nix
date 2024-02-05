@@ -1,4 +1,20 @@
-{ appimageTools, fetchurl, lib, stdenv }:
+{
+  appimageTools
+  , fetchurl
+  , lib
+  , stdenv
+  , sentry-native
+  , zlib
+  , qt6
+  , poco
+  , sqlite
+  , xxHash
+  , log4cplus
+  , libsecret
+  , glib
+}:
+
+with lib;
 
 let
   pname = "kDrive";
@@ -23,7 +39,7 @@ let
 
   src = srcs.${stdenv.hostPlatform.system} or (throw "Unsupported system: ${stdenv.hostPlatform.system}");
 
-  meta = with lib; {
+  meta = {
     description = "kDrive desktop synchronization client.";
     homepage = "https://www.infomaniak.com/kdrive";
     license = licenses.gpl3Plus;
@@ -34,82 +50,117 @@ let
 
   contents = appimageTools.extractType2 { inherit pname version src; };
 
-  linux = appimageTools.wrapType2 {
+  linux = stdenv.mkDerivation rec {
     inherit pname version src meta;
 
-    multiArch = false;
-    extraPkgs = pkgs: (appimageTools.defaultFhsEnvArgs.multiPkgs pkgs) ++ (with pkgs; [
-      alsa-lib
-      brotli
-      curl
-      cyrus_sasl
-      dbus
-      e2fsprogs
-      expat
-      gmp
-      freetype
-      fontconfig
-      gcc-unwrapped
-      glib
-      glibc
-      gnutls
-      heimdal
-      icu66
-      keyutils
-      libffi
-      libgcrypt
-      libgpg-error
-      libidn2
-      libjpeg
-      libkrb5
-      libpng
-      libpsl
-      libsecret
-      libselinux
-      libssh
-      libtasn1
-      libunistring
-      libxcrypt-legacy
-      libxkbcommon
-      libxml2
-      log4cplus
-      lz4
-      nettle
-      nghttp2
-      nspr
-      nss
-      openldap
-      openssl
-      p11-kit
-      pcre2
-      poco
-      qt6.full
-      rtmpdump
-      sentry-native
-      sqlite
-      systemd
-      util-linux
-      xorg.libxcb
-      xorg.libxkbfile
-      xorg.libxshmfence
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libXrender
-      xorg.libXtst
-      xxHash
-      xz
-      zlib
-    ]);
+    dontUnpack = true;
+    #dontPatch = true;
+    dontConfigure = true;
+    dontBuild = true;
 
-    extraInstallCommands = ''
-      mv $out/bin/${pname}-${version} $out/bin/${pname}
-      install -m 444 -D ${contents}/kDrive_client.desktop -t $out/share/applications
-      cp -r ${contents}/usr/share/icons $out/share
+    libPath = makeLibraryPath [
+      sentry-native
+      zlib
+      qt6.full
+      poco
+      sqlite
+      xxHash
+      log4cplus
+      libsecret
+      glib
+    ];
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p $out/bin
+      cp -R ${contents}/usr/bin/* $out/bin
+
+      runHook postInstall
     '';
+
+    postFixup = ''
+      pushd $out/bin
+      for file in kDrive kDrive_client; do
+        patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $file
+        patchelf --set-rpath ${libPath} $file || true
+      done
+      popd
+    '';
+    #multiArch = false;
+    #extraPkgs = pkgs: (appimageTools.defaultFhsEnvArgs.multiPkgs pkgs) ++ (with pkgs; [
+      #alsa-lib
+      #brotli
+      #curl
+      #cyrus_sasl
+      #dbus
+      #e2fsprogs
+      #expat
+      #gmp
+      #freetype
+      #fontconfig
+      #gcc-unwrapped
+      #glib
+      #glibc
+      #gnutls
+      #heimdal
+      #icu66
+      #keyutils
+      #libffi
+      #libgcrypt
+      #libgpg-error
+      #libidn2
+      #libjpeg
+      #libkrb5
+      #libpng
+      #libpsl
+      #libsecret
+      #libselinux
+      #libssh
+      #libtasn1
+      #libunistring
+      #libxcrypt-legacy
+      #libxkbcommon
+      #libxml2
+      #log4cplus
+      #lz4
+      #nettle
+      #nghttp2
+      #nspr
+      #nss
+      #openldap
+      #openssl
+      #p11-kit
+      #pcre2
+      #poco
+      #qt6.full
+      #rtmpdump
+      #sentry-native
+      #sqlite
+      #systemd
+      #util-linux
+      #xorg.libxcb
+      #xorg.libxkbfile
+      #xorg.libxshmfence
+      #xorg.libX11
+      #xorg.libXcomposite
+      #xorg.libXdamage
+      #xorg.libXext
+      #xorg.libXfixes
+      #xorg.libXrandr
+      #xorg.libXrender
+      #xorg.libXtst
+      #xxHash
+      #xz
+      #zlib
+    #]);
+
+    #extraInstallCommands = ''
+      #mv $out/bin/${pname}-${version} $out/bin/${pname}
+      #install -m 444 -D ${contents}/kDrive_client.desktop -t $out/share/applications
+      #cp -r ${contents}/usr/share/icons $out/share
+      #touch ${contents}/sync-exclude.lst
+    #'';
   };
 
   darwin = stdenv.mkDerivation {
