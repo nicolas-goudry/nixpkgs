@@ -12,6 +12,8 @@
   , log4cplus
   , libsecret
   , glib
+  , gcc-unwrapped
+  , makeWrapper
 }:
 
 with lib;
@@ -58,23 +60,21 @@ let
     dontConfigure = true;
     dontBuild = true;
 
+    nativeBuildInputs = [ makeWrapper ];
     libPath = makeLibraryPath [
       sentry-native
       zlib
       qt6.full
-      poco
-      sqlite
-      xxHash
-      log4cplus
       libsecret
       glib
+      gcc-unwrapped
     ];
 
     installPhase = ''
       runHook preInstall
 
-      mkdir -p $out/bin
-      cp -R ${contents}/usr/bin/* $out/bin
+      mkdir -p $out
+      cp -R ${contents}/usr/* $out
 
       runHook postInstall
     '';
@@ -83,9 +83,11 @@ let
       pushd $out/bin
       for file in kDrive kDrive_client; do
         patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $file
-        patchelf --set-rpath ${libPath} $file || true
+        patchelf --set-rpath ${libPath}:$out/lib $file || true
       done
       popd
+
+      wrapProgram $out/bin/kDrive --set QT_PLUGIN_PATH $out/plugins
     '';
     #multiArch = false;
     #extraPkgs = pkgs: (appimageTools.defaultFhsEnvArgs.multiPkgs pkgs) ++ (with pkgs; [
