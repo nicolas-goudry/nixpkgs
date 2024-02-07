@@ -89,7 +89,7 @@ let
       done
 
       # Copy some content from share directory
-      for dir in applications icons kDrive_client mime; do
+      for dir in icons kDrive_client mime; do
         mkdir -p $out/share/$dir
         cp -R ${contents}/usr/share/$dir/* $out/share/$dir
       done
@@ -97,6 +97,10 @@ let
       # Keep liblog4cplusU since it is not available in nixpkgs
       mkdir -p $out/lib
       cp -R ${contents}/usr/lib/liblog4cplusU.so.9 $out/lib
+
+      # Keep only one desktop entry
+      mkdir -p $out/share/applications
+      cp -R ${contents}/usr/share/applications/kDrive.desktop $out/share/applications
 
       runHook postInstall
     '';
