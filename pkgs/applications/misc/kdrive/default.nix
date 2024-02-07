@@ -1,19 +1,15 @@
 {
-  appimageTools
-  , fetchurl
-  , lib
-  , stdenv
-  , sentry-native
-  , zlib
-  , qt6
+  appimageTools, fetchurl, lib, stdenv, wrapQtAppsHook
+  , gcc-unwrapped
+  , glib
+  , libsecret
   , poco
+  , qt6
+  , qtbase
+  , sentry-native
   , sqlite
   , xxHash
-  , log4cplus
-  , libsecret
-  , glib
-  , gcc-unwrapped
-  , makeWrapper
+  , zlib
 }:
 
 with lib;
@@ -56,25 +52,43 @@ let
     inherit pname version src meta;
 
     dontUnpack = true;
-    #dontPatch = true;
     dontConfigure = true;
     dontBuild = true;
+    dontWrapQtApps = true;
 
-    nativeBuildInputs = [ makeWrapper ];
+    buildInputs = [ qtbase ];
+    nativeBuildInputs = [ wrapQtAppsHook ];
     libPath = makeLibraryPath [
-      sentry-native
-      zlib
-      qt6.full
-      libsecret
-      glib
       gcc-unwrapped
+      glib
+      libsecret
+      poco
+      qt6.qtbase
+      sentry-native
+      sqlite
+      xxHash
+      zlib
     ];
 
     installPhase = ''
       runHook preInstall
 
-      mkdir -p $out
-      cp -R ${contents}/usr/* $out
+      for dir in resources translations; do
+        mkdir -p $out/$dir
+        cp -R ${contents}/usr/$dir/* $out/$dir
+      done
+      mkdir -p $out/bin
+      install -m 0555 ${contents}/usr/bin/kDrive $out/bin
+      install -m 0555 ${contents}/usr/bin/kDrive_client $out/bin
+      install -m 0444 ${contents}/usr/bin/qt.conf $out/bin
+      install -m 0666 ${contents}/usr/bin/sync-exclude.lst $out/bin
+      ls -lah $out/bin
+      for dir in applications icons kDrive_client mime; do
+        mkdir -p $out/share/$dir
+        cp -R ${contents}/usr/share/$dir/* $out/share/$dir
+      done
+      mkdir -p $out/lib
+      cp -R ${contents}/usr/lib/liblog4cplusU.so.9 $out/lib
 
       runHook postInstall
     '';
@@ -87,82 +101,8 @@ let
       done
       popd
 
-      wrapProgram $out/bin/kDrive --set QT_PLUGIN_PATH $out/plugins
+      wrapQtApp $out/bin/kDrive
     '';
-    #multiArch = false;
-    #extraPkgs = pkgs: (appimageTools.defaultFhsEnvArgs.multiPkgs pkgs) ++ (with pkgs; [
-      #alsa-lib
-      #brotli
-      #curl
-      #cyrus_sasl
-      #dbus
-      #e2fsprogs
-      #expat
-      #gmp
-      #freetype
-      #fontconfig
-      #gcc-unwrapped
-      #glib
-      #glibc
-      #gnutls
-      #heimdal
-      #icu66
-      #keyutils
-      #libffi
-      #libgcrypt
-      #libgpg-error
-      #libidn2
-      #libjpeg
-      #libkrb5
-      #libpng
-      #libpsl
-      #libsecret
-      #libselinux
-      #libssh
-      #libtasn1
-      #libunistring
-      #libxcrypt-legacy
-      #libxkbcommon
-      #libxml2
-      #log4cplus
-      #lz4
-      #nettle
-      #nghttp2
-      #nspr
-      #nss
-      #openldap
-      #openssl
-      #p11-kit
-      #pcre2
-      #poco
-      #qt6.full
-      #rtmpdump
-      #sentry-native
-      #sqlite
-      #systemd
-      #util-linux
-      #xorg.libxcb
-      #xorg.libxkbfile
-      #xorg.libxshmfence
-      #xorg.libX11
-      #xorg.libXcomposite
-      #xorg.libXdamage
-      #xorg.libXext
-      #xorg.libXfixes
-      #xorg.libXrandr
-      #xorg.libXrender
-      #xorg.libXtst
-      #xxHash
-      #xz
-      #zlib
-    #]);
-
-    #extraInstallCommands = ''
-      #mv $out/bin/${pname}-${version} $out/bin/${pname}
-      #install -m 444 -D ${contents}/kDrive_client.desktop -t $out/share/applications
-      #cp -r ${contents}/usr/share/icons $out/share
-      #touch ${contents}/sync-exclude.lst
-    #'';
   };
 
   darwin = stdenv.mkDerivation {
