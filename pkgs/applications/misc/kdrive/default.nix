@@ -1,5 +1,9 @@
 {
-  appimageTools, fetchurl, lib, stdenv, wrapQtAppsHook
+  appimageTools
+  , fetchurl
+  , lib
+  , stdenv
+  , wrapQtAppsHook
   , gcc-unwrapped
   , glib
   , libsecret
@@ -46,7 +50,7 @@ let
     mainProgram = "kDrive";
   };
 
-  contents = appimageTools.extractType2 { inherit pname version src; };
+  contents = appimageTools.extract { inherit pname version src; };
 
   linux = stdenv.mkDerivation rec {
     inherit pname version src meta;
@@ -54,11 +58,13 @@ let
     dontUnpack = true;
     dontConfigure = true;
     dontBuild = true;
+    # Avoid auto-wrap to set rpath
     dontWrapQtApps = true;
 
     buildInputs = [ qtbase ];
     nativeBuildInputs = [ wrapQtAppsHook ];
     libPath = makeLibraryPath [
+      # kDrive dependencies
       gcc-unwrapped
       glib
       libsecret
@@ -68,25 +74,27 @@ let
       sqlite
       xxHash
       zlib
+      # kDrive_client dependencies
+      qt6.qtsvg
+      qt6.qtwebengine
     ];
 
     installPhase = ''
       runHook preInstall
 
-      for dir in resources translations; do
+      # Copy top-level stuff
+      for dir in bin resources translations; do
         mkdir -p $out/$dir
         cp -R ${contents}/usr/$dir/* $out/$dir
       done
-      mkdir -p $out/bin
-      install -m 0555 ${contents}/usr/bin/kDrive $out/bin
-      install -m 0555 ${contents}/usr/bin/kDrive_client $out/bin
-      install -m 0444 ${contents}/usr/bin/qt.conf $out/bin
-      install -m 0666 ${contents}/usr/bin/sync-exclude.lst $out/bin
-      ls -lah $out/bin
+
+      # Copy some content from share directory
       for dir in applications icons kDrive_client mime; do
         mkdir -p $out/share/$dir
         cp -R ${contents}/usr/share/$dir/* $out/share/$dir
       done
+
+      # Keep liblog4cplusU since it is not available in nixpkgs
       mkdir -p $out/lib
       cp -R ${contents}/usr/lib/liblog4cplusU.so.9 $out/lib
 
