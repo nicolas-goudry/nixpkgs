@@ -17822,5 +17822,5 @@ with pkgs;
     flutter = flutter324;
   };
 
-  kdrive = callPackage ../applications/misc/kdrive { };
+  kdrive = qt6Packages.callPackage ../applications/misc/kdrive { };
 }
