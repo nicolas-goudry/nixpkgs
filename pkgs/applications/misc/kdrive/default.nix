@@ -11,6 +11,7 @@
   , freetype
   , gcc-unwrapped
   , glib
+  , glibc
   , gmp
   , libglvnd
   , libgpg-error
@@ -76,17 +77,19 @@ let
       freetype
       gcc-unwrapped
       glib
+      glibc
       gmp
       libglvnd
       libgpg-error
       p11-kit
       qt6.qtbase
+      qt6.qtdeclarative
+      qt6.qtsvg
       xorg.libICE
       xorg.libSM
       xorg.libX11
       xorg.libxcb
       zlib
-      qt6.qtsvg
     ];
 
     installPhase = ''
