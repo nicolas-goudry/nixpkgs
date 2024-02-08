@@ -41849,4 +41849,8 @@ with pkgs;
   insulator2 = callPackage ../applications/misc/insulator2 {};
 
   animdl = python3Packages.callPackage ../applications/video/animdl { };
+
+  kdrive = callPackage ../by-name/kd/kdrive/package.nix {
+    inherit (qt6) wrapQtAppsHook;
+  };
 }
