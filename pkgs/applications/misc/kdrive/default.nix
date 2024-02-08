@@ -4,15 +4,20 @@
   , lib
   , stdenv
   , wrapQtAppsHook
+  , alsa-lib
+  , e2fsprogs
+  , expat
+  , fontconfig
+  , freetype
   , gcc-unwrapped
   , glib
-  , libsecret
-  , poco
+  , gmp
+  , libglvnd
+  , libgpg-error
+  , p11-kit
   , qt6
   , qtbase
-  , sentry-native
-  , sqlite
-  , xxHash
+  , xorg
   , zlib
 }:
 
@@ -64,26 +69,31 @@ let
     buildInputs = [ qtbase ];
     nativeBuildInputs = [ wrapQtAppsHook ];
     libPath = makeLibraryPath [
-      # kDrive dependencies
+      alsa-lib
+      e2fsprogs
+      expat
+      fontconfig
+      freetype
       gcc-unwrapped
       glib
-      libsecret
-      poco
+      gmp
+      libglvnd
+      libgpg-error
+      p11-kit
       qt6.qtbase
-      sentry-native
-      sqlite
-      xxHash
+      xorg.libICE
+      xorg.libSM
+      xorg.libX11
+      xorg.libxcb
       zlib
-      # kDrive_client dependencies
       qt6.qtsvg
-      qt6.qtwebengine
     ];
 
     installPhase = ''
       runHook preInstall
 
       # Copy top-level stuff
-      for dir in bin resources translations; do
+      for dir in bin lib plugins resources translations; do
         mkdir -p $out/$dir
         cp -R ${contents}/usr/$dir/* $out/$dir
       done
@@ -93,10 +103,6 @@ let
         mkdir -p $out/share/$dir
         cp -R ${contents}/usr/share/$dir/* $out/share/$dir
       done
-
-      # Keep liblog4cplusU since it is not available in nixpkgs
-      mkdir -p $out/lib
-      cp -R ${contents}/usr/lib/liblog4cplusU.so.9 $out/lib
 
       # Keep only one desktop entry
       mkdir -p $out/share/applications
@@ -109,6 +115,11 @@ let
       pushd $out/bin
       for file in kDrive kDrive_client; do
         patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $file
+      done
+      popd
+
+      pushd $out
+      for file in $(find . -type f \( -name kDrive -o -name kDrive_client -o -name \*.so\* \)); do
         patchelf --set-rpath ${libPath}:$out/lib $file || true
       done
       popd
