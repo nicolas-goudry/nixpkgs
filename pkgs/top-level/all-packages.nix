@@ -40981,5 +40981,5 @@ with pkgs;
     fltk = fltk13;
   };
 
-  kdrive = qt6Packages.callPackage ../applications/misc/kdrive { };
+  kdrive = callPackage ../applications/misc/kdrive { };
 }
