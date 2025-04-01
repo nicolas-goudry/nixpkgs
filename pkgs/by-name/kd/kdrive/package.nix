@@ -17,6 +17,7 @@
   sentry-native,
   shared-mime-info,
   sqlite,
+  utf8proc,
   vulkan-headers,
   xxHash,
   zlib,
@@ -64,6 +65,7 @@ stdenv.mkDerivation rec {
     shared-mime-info
     sentry-native
     sqlite
+    utf8proc
     vulkan-headers
     xxHash
     zlib
