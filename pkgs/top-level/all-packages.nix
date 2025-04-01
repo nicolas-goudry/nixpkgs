@@ -17821,6 +17821,4 @@ with pkgs;
   rustdesk-flutter = callPackage ../by-name/ru/rustdesk-flutter/package.nix {
     flutter = flutter324;
   };
-
-  kdrive = callPackage ../applications/misc/kdrive { };
 }
