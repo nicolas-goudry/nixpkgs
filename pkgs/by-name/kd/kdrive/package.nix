@@ -1,25 +1,25 @@
 {
-  lib
-  , stdenv
-  , fetchFromGitHub
-  , cmake
-  , glib
-  , libgcrypt
-  , libGL
-  , libgpg-error
-  , libsecret
-  , libxkbcommon
-  , log4cplus
-  , openssl_3_3
-  , pkg-config
-  , poco
-  , qt6
-  , sentry-native
-  , shared-mime-info
-  , sqlite
-  , vulkan-headers
-  , xxHash
-  , zlib
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  cmake,
+  glib,
+  libgcrypt,
+  libGL,
+  libgpg-error,
+  libsecret,
+  libxkbcommon,
+  log4cplus,
+  openssl_3_3,
+  pkg-config,
+  poco,
+  qt6,
+  sentry-native,
+  shared-mime-info,
+  sqlite,
+  vulkan-headers,
+  xxHash,
+  zlib,
 }:
 
 stdenv.mkDerivation rec {
@@ -43,7 +43,7 @@ stdenv.mkDerivation rec {
     libxkbcommon
     # This is required because kdrive needs the log4cplusConfig.cmake file, which is only generated when built with cmake
     # Since log4cplus is built with make in nixpkgs, we rebuild it with cmake
-    (log4cplus.overrideAttrs(_: {
+    (log4cplus.overrideAttrs (_: {
       nativeBuildInputs = [ cmake ];
 
       # kDrive is using the unicode version of log4cplus
