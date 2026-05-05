@@ -1,0 +1,13 @@
+diff --git a/src/syscall/syscall.c b/src/syscall/syscall.c
+index 7d82918..1ea5486 100644
+--- a/src/syscall/syscall.c
++++ b/src/syscall/syscall.c
+@@ -862,7 +862,7 @@ static int64_t sc_prctl(guest_t *g,
+             return -LINUX_EINVAL;
+         if (current_thread) {
+             uint64_t actlr = 0;
+-            hv_vcpu_get_sys_reg(current_thread->vcpu, HV_SYS_REG_ACTLR_EL1,
++            hv_vcpu_get_sys_reg(current_thread->vcpu, HV_SYS_REG_SCTLR_EL1,
+                                 &actlr);
+             return (actlr & (1ULL << 1)) ? LINUX_PR_SET_MEM_MODEL_TSO
+                                          : LINUX_PR_SET_MEM_MODEL_DEFAULT;
