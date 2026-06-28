@@ -4,6 +4,7 @@
   fetchFromGitHub,
   cmake,
   cups,
+  desktop-file-utils,
   libGL,
   libgcrypt,
   libgpg-error,
@@ -19,6 +20,7 @@
   sentry-native,
   shared-mime-info,
   sqlite,
+  xdg-utils,
   xxhash,
   zlib,
 }:
@@ -65,6 +67,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     cups
+    desktop-file-utils
     libGL
     libgcrypt
     libgpg-error
@@ -84,12 +87,15 @@ stdenv.mkDerivation (finalAttrs: {
     sentry-native
     shared-mime-info
     sqlite
+    xdg-utils
     xxhash
     zlib
   ];
 
-  # Patch to disable Sentry's crashpad handler. Nixpkgs' sentry-native uses breakpad handler (which should be fine).
-  patches = [ ./kdrive-CMakeLists.txt.patch ];
+  patches = [
+    # Patch to disable Sentry's crashpad handler. Nixpkgs' sentry-native uses breakpad handler (which should be fine).
+    ./CMakeLists.txt.patch
+  ];
 
   # "Hack" to have SYSCONFDIR point to the Nix store path thanks to ${outputBin}. This is needed because kDrive
   # installs sentry's shared library and sync-exclude.lst at this location. If unset, cmake will attempt to install
@@ -117,12 +123,6 @@ stdenv.mkDerivation (finalAttrs: {
   # Move sync-exclude.lst to the bin directory since kDrive fails to start without it at this location.
   postInstall = ''
     mv $out/kDrive/sync-exclude.lst $out/bin
-
-    # Copy desktop and icon files if they exist
-    if [ -f $out/share/applications/kDrive_client.desktop ]; then
-      sed -i "s|Exec=.*|Exec=$out/bin/kDrive|g" $out/share/applications/kDrive_client.desktop
-    fi
-
     rm -rf $out/kDrive
   '';
 
